@@ -57,3 +57,7 @@
   padding: 5px;
   overflow: scroll;
 }
+
+.cat-pic {
+  max-width: 400px;
+}
