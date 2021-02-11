@@ -61,3 +61,7 @@
 .cat-pic {
   max-width: 400px;
 }
+
+button {
+  margin-left: 15px;
+}

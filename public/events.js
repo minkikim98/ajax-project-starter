@@ -1,5 +1,3 @@
-console.log("test");
-
 window.addEventListener("DOMContentLoaded", async event => {
     // Phase 1: Fetches kitten picture upon first loadup
     updatePic();
@@ -8,14 +6,20 @@ window.addEventListener("DOMContentLoaded", async event => {
     let newCatButton = document.getElementById("new-pic");
     newCatButton.addEventListener("click", updatePic);
 
+    // Phase 4: Upvote and Downvote
     const upvoteButton = document.getElementById('upvote');
     upvoteButton.addEventListener('click', upVote);
 
     const downvoteButton = document.getElementById('downvote');
     downvoteButton.addEventListener('click', downVote);
 
-    const commentForm = document.querySelector('.comment-form')
-    commentForm.addEventListener('submit', makeComment)
+    // Phase 5: Comments
+    const commentForm = document.querySelector('.comment-form');
+    commentForm.addEventListener('submit', makeComment);
+
+    // Bonus Phase: Delete Comments
+    const commentsSection = document.querySelector(".comments");
+    commentsSection.addEventListener("click", deleteComment);
 });
 
 async function updatePic() {
@@ -41,11 +45,11 @@ async function upVote() {
         method: 'PATCH'
     });
 
-    if(res.ok){
+    if (res.ok) {
         const json = await res.json();
         scoreDisplay.innerHTML = json.score;
-    }else {
-        scoreDisplay.innerHTML = 'Error'
+    } else {
+        scoreDisplay.innerHTML = 'Error';
     }
 }
 
@@ -56,25 +60,29 @@ async function downVote() {
         method: 'PATCH'
     });
 
-    if(res.ok){
+    if (res.ok) {
         const json = await res.json();
         scoreDisplay.innerHTML = json.score;
-    }else {
-        scoreDisplay.innerHTML = 'Error'
+    } else {
+        scoreDisplay.innerHTML = 'Error';
     }
 }
 
 async function makeComment(event) {
     event.preventDefault();
-    const commentField = document.getElementById('user-comment')
-    const commentForm = document.querySelector('.comment-form')
-    const commentsSection = document.querySelector('.comments')
 
+    const commentField = document.getElementById('user-comment');
+
+    // Get comment text using FormData object
+    const commentForm = document.querySelector('.comment-form');
     const formData = new FormData(commentForm);
-    let commentText = formData.get('user-comment')
+    let commentText = formData.get('user-comment');
+    console.log(commentText);
 
-    commentField.value = ''
+    // Reset comment field
+    commentField.value = '';
 
+    // Make POST request to server with comment text
     const res = await fetch('/kitten/comments', {
         method: 'POST',
         headers: {
@@ -83,16 +91,38 @@ async function makeComment(event) {
         body: JSON.stringify({
             comment: commentText
         })
-    })
+    });
+    
+    const json = await res.json();
+    updateComments(json);
+}
 
-    const json = await res.json()
-    console.log(json)
-    commentsSection.innerHTML = ''
+async function deleteComment(event) {
+    let element = event.target;
+    if (element.nodeName === "BUTTON") {
+        const res = await fetch('/kitten/comments/' + element.id, {
+            method: 'DELETE'
+        });
+        const json = await res.json();
+        updateComments(json);
+    }
+}
 
-    json.comments.forEach(comment => {
-        let newComment = document.createElement('div')
-        newComment.innerHTML = comment;
-        commentsSection.appendChild(newComment)
-    })
+function updateComments(json) {
+    const commentsSection = document.querySelector('.comments');
+    commentsSection.innerHTML = '';
+    json.comments.forEach((comment, index) => {
+        let newComment = document.createElement("div");
 
+        let newCommentText = document.createElement('span');
+        newCommentText.innerHTML = comment;
+        newComment.appendChild(newCommentText);
+
+        let deleteButton = document.createElement("button");
+        deleteButton.innerHTML = "Delete Comment";
+        deleteButton.setAttribute("id", index.toString());
+        newCommentText.appendChild(deleteButton);
+
+        commentsSection.appendChild(newComment);
+    });
 }
